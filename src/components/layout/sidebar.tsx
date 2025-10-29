@@ -21,32 +21,32 @@ const menuItems = [
   {
     label: "Dashboard",
     icon: LayoutDashboard,
-    href: "/",
+    href: "/dashboard",
   },
   {
     label: "User Management",
     icon: Users,
-    href: "/users",
+    href: "/dashboard/users",
   },
   {
     label: "Transactions Management",
     icon: CreditCard,
-    href: "/transactions",
+    href: "/dashboard/transactions",
   },
   {
     label: "Lokasi Sampah",
     icon: MapPin,
-    href: "/waste-locations",
+    href: "/dashboard/waste-locations",
   },
   {
     label: "Artikel Management",
     icon: FileText,
-    href: "/articles",
+    href: "/dashboard/articles",
   },
   {
     label: "Product Management",
     icon: Package,
-    href: "/products",
+    href: "/dashboard/products",
   },
 ];
 
@@ -154,11 +154,11 @@ export function Sidebar({ onClose }: SidebarProps) {
         {/* Settings (pinned at bottom) */}
         <div className="border-t border-white/10 p-3 sm:p-4">
           <Link
-            href="/settings"
+            href="/dashboard/settings"
             onClick={handleLinkClick}
             className={cn(
               "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 touch-manipulation",
-              pathname === "/settings"
+              pathname === "/dashboard/settings"
                 ? "bg-emerald-500/10 text-emerald-400 shadow-lg shadow-emerald-500/20"
                 : "text-gray-400 hover:bg-white/5 hover:text-white active:bg-white/10",
               isCollapsed && "justify-center px-2"
