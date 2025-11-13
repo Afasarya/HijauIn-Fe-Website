@@ -1,12 +1,41 @@
 "use client";
 
-import { Bell, Search, ChevronDown, Menu } from "lucide-react";
+import { Bell, Search, ChevronDown, Menu, LogOut, User, Settings } from "lucide-react";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useSidebar } from "./sidebar-context";
+import { useAuth } from "@/contexts/auth-context";
 
 export function TopBar() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const { toggleSidebar } = useSidebar();
+  const { user, logout } = useAuth();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
+
+  const handleProfileClick = () => {
+    setIsDropdownOpen(false);
+    router.push('/dashboard/settings');
+  };
+
+  // Get user initials
+  const getUserInitials = () => {
+    if (!user) return 'A';
+    return user.nama_panggilan.charAt(0).toUpperCase();
+  };
+
+  // Get user role display
+  const getUserRoleDisplay = () => {
+    if (!user) return 'Admin';
+    return user.role === 'ADMIN' ? 'Administrator' : 'User';
+  };
 
   return (
     <header className="sticky top-0 z-30 h-14 sm:h-16 border-b border-white/10 bg-[#0a0a0a]/80 backdrop-blur-xl">
@@ -51,12 +80,24 @@ export function TopBar() {
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
               className="flex items-center gap-2 sm:gap-3 rounded-lg border border-white/10 bg-white/5 px-2 sm:px-3 py-1.5 sm:py-2 transition-colors hover:bg-white/10"
             >
-              <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-linear-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-xs sm:text-sm font-semibold text-white">
-                A
-              </div>
+              {user?.avatar_url ? (
+                <img 
+                  src={user.avatar_url} 
+                  alt={user.nama_panggilan}
+                  className="h-7 w-7 sm:h-8 sm:w-8 rounded-full object-cover"
+                />
+              ) : (
+                <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-linear-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-xs sm:text-sm font-semibold text-white">
+                  {getUserInitials()}
+                </div>
+              )}
               <div className="hidden md:flex flex-col items-start">
-                <span className="text-sm font-medium text-white">Admin</span>
-                <span className="text-xs text-gray-400">Super Admin</span>
+                <span className="text-sm font-medium text-white">
+                  {user?.nama_panggilan || 'Admin'}
+                </span>
+                <span className="text-xs text-gray-400">
+                  {getUserRoleDisplay()}
+                </span>
               </div>
               <ChevronDown className="h-4 w-4 text-gray-400 hidden sm:block" />
             </button>
@@ -70,16 +111,39 @@ export function TopBar() {
                   onClick={() => setIsDropdownOpen(false)}
                 />
                 
-                <div className="absolute right-0 mt-2 w-48 rounded-xl border border-white/10 bg-[#171717] shadow-xl z-50">
+                <div className="absolute right-0 mt-2 w-56 rounded-xl border border-white/10 bg-[#171717] shadow-xl z-50">
+                  {/* User Info Section */}
+                  <div className="p-3 border-b border-white/10">
+                    <p className="text-sm font-medium text-white truncate">
+                      {user?.nama_panggilan || 'Admin'}
+                    </p>
+                    <p className="text-xs text-gray-400 truncate">
+                      {user?.email || 'admin@hijauin.com'}
+                    </p>
+                  </div>
+
+                  {/* Menu Items */}
                   <div className="p-2">
-                    <button className="w-full rounded-lg px-3 py-2 text-left text-sm text-gray-300 transition-colors hover:bg-white/5 hover:text-white">
-                      Profile Settings
+                    <button 
+                      onClick={handleProfileClick}
+                      className="w-full flex items-center gap-3 rounded-lg px-3 py-2 text-left text-sm text-gray-300 transition-colors hover:bg-white/5 hover:text-white"
+                    >
+                      <User className="h-4 w-4" />
+                      My Profile
                     </button>
-                    <button className="w-full rounded-lg px-3 py-2 text-left text-sm text-gray-300 transition-colors hover:bg-white/5 hover:text-white">
-                      Account
+                    <button 
+                      onClick={handleProfileClick}
+                      className="w-full flex items-center gap-3 rounded-lg px-3 py-2 text-left text-sm text-gray-300 transition-colors hover:bg-white/5 hover:text-white"
+                    >
+                      <Settings className="h-4 w-4" />
+                      Settings
                     </button>
                     <div className="my-1 h-px bg-white/10"></div>
-                    <button className="w-full rounded-lg px-3 py-2 text-left text-sm text-red-400 transition-colors hover:bg-red-500/10">
+                    <button 
+                      onClick={handleLogout}
+                      className="w-full flex items-center gap-3 rounded-lg px-3 py-2 text-left text-sm text-red-400 transition-colors hover:bg-red-500/10"
+                    >
+                      <LogOut className="h-4 w-4" />
                       Logout
                     </button>
                   </div>

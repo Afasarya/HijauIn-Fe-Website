@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import {
   Users,
   CreditCard,
@@ -7,59 +10,178 @@ import {
   ArrowDownRight,
   Package,
   FileText,
+  Loader2,
+  RefreshCw,
 } from "lucide-react";
+import { dashboardService } from "@/lib/api";
+import { DashboardStats, TransactionStatus } from "@/types/common";
 
 export default function Home() {
-  const metrics = [
-    {
-      title: "Total Revenue",
-      value: "$1,250.00",
-      change: "+12.5%",
-      trend: "up",
-      icon: CreditCard,
-      description: "Trending up this month",
-    },
-    {
-      title: "New Customers",
-      value: "1,234",
-      change: "-20%",
-      trend: "down",
-      icon: Users,
-      description: "Down 20% this period",
-    },
-    {
-      title: "Active Accounts",
-      value: "45,678",
-      change: "+12.5%",
-      trend: "up",
-      icon: TrendingUp,
-      description: "Strong user retention",
-    },
-    {
-      title: "Growth Rate",
-      value: "4.5%",
-      change: "+4.5%",
-      trend: "up",
-      icon: ArrowUpRight,
-      description: "Steady performance increase",
-    },
-  ];
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const quickStats = [
-    { label: "Waste Locations", value: "156", icon: MapPin, color: "emerald" },
-    { label: "Articles Published", value: "89", icon: FileText, color: "blue" },
-    { label: "Products Listed", value: "234", icon: Package, color: "purple" },
-    { label: "Active Users", value: "12.5K", icon: Users, color: "orange" },
-  ];
+  useEffect(() => {
+    fetchDashboardStats();
+  }, []);
+
+  const fetchDashboardStats = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const data = await dashboardService.getStats();
+      setStats(data);
+      console.log('Dashboard stats fetched:', data);
+    } catch (err: any) {
+      console.error("Error fetching dashboard stats:", err);
+      setError(err.message || "Failed to load dashboard data");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleRefresh = async () => {
+    try {
+      setIsRefreshing(true);
+      await fetchDashboardStats();
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  // Format currency
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      minimumFractionDigits: 0,
+    }).format(amount);
+  };
+
+  // Format number with K suffix
+  const formatNumber = (num: number) => {
+    if (num >= 1000) {
+      return (num / 1000).toFixed(1) + "K";
+    }
+    return num.toString();
+  };
+
+  // Get transaction status badge color
+  const getStatusColor = (status: TransactionStatus) => {
+    switch (status) {
+      case TransactionStatus.PAID:
+      case TransactionStatus.DELIVERED:
+        return "bg-emerald-500/10 text-emerald-400";
+      case TransactionStatus.PENDING:
+        return "bg-yellow-500/10 text-yellow-400";
+      case TransactionStatus.CANCELLED:
+      case TransactionStatus.FAILED:
+        return "bg-red-500/10 text-red-400";
+      case TransactionStatus.PROCESSING:
+      case TransactionStatus.SHIPPED:
+        return "bg-blue-500/10 text-blue-400";
+      default:
+        return "bg-gray-500/10 text-gray-400";
+    }
+  };
+
+  // Calculate metrics
+  const metrics = stats
+    ? [
+        {
+          title: "Total Revenue",
+          value: formatCurrency(stats.totalRevenue),
+          change: stats.revenueGrowth ? `${stats.revenueGrowth > 0 ? "+" : ""}${stats.revenueGrowth.toFixed(1)}%` : "+0%",
+          trend: !stats.revenueGrowth || stats.revenueGrowth >= 0 ? "up" : "down",
+          icon: CreditCard,
+          description: stats.revenueGrowth ? "Trending this month" : "No change",
+        },
+        {
+          title: "Total Users",
+          value: formatNumber(stats.totalUsers),
+          change: stats.userGrowth ? `${stats.userGrowth > 0 ? "+" : ""}${stats.userGrowth.toFixed(1)}%` : "+0%",
+          trend: !stats.userGrowth || stats.userGrowth >= 0 ? "up" : "down",
+          icon: Users,
+          description: stats.userGrowth ? "User growth rate" : "No change",
+        },
+        {
+          title: "Total Transactions",
+          value: formatNumber(stats.totalTransactions),
+          change: "+0%",
+          trend: "up",
+          icon: TrendingUp,
+          description: "Total orders",
+        },
+        {
+          title: "Products Listed",
+          value: formatNumber(stats.totalProducts),
+          change: "+0%",
+          trend: "up",
+          icon: Package,
+          description: "Active products",
+        },
+      ]
+    : [];
+
+  const quickStats = stats
+    ? [
+        { label: "Waste Locations", value: stats.totalWasteLocations.toString(), icon: MapPin, color: "emerald" },
+        { label: "Articles Published", value: stats.totalArticles.toString(), icon: FileText, color: "blue" },
+        { label: "Products Listed", value: stats.totalProducts.toString(), icon: Package, color: "purple" },
+        { label: "Active Users", value: formatNumber(stats.totalUsers), icon: Users, color: "orange" },
+      ]
+    : [];
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-emerald-500 mx-auto mb-4" />
+          <p className="text-gray-400">Loading dashboard data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="h-12 w-12 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-4">
+            <span className="text-2xl">⚠️</span>
+          </div>
+          <p className="text-red-400 mb-2">Failed to load dashboard</p>
+          <p className="text-sm text-gray-500 mb-4">{error}</p>
+          <button
+            onClick={fetchDashboardStats}
+            className="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 md:space-y-8">
       {/* Header */}
-      <div className="space-y-2">
-        <h1 className="text-2xl sm:text-3xl font-bold text-white">Dashboard</h1>
-        <p className="text-sm text-gray-400 max-w-2xl">
-          Welcome back! Here's what's happening with your platform today.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white">Dashboard</h1>
+          <p className="text-sm text-gray-400 max-w-2xl">
+            Welcome back! Here's what's happening with your platform today.
+          </p>
+        </div>
+        <button
+          onClick={handleRefresh}
+          disabled={isRefreshing}
+          className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg transition-colors disabled:opacity-50"
+        >
+          <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+          {isRefreshing ? 'Refreshing...' : 'Refresh Data'}
+        </button>
       </div>
 
       {/* Main Metrics - Horizontal Scroll on Mobile */}
@@ -153,61 +275,88 @@ export default function Home() {
             Recent Transactions
           </h3>
           <div className="space-y-4">
-            {[1, 2, 3, 4].map((i) => (
-              <div
-                key={i}
-                className="flex items-center justify-between border-b border-white/5 pb-4 last:border-0 gap-3"
-              >
-                <div className="flex items-center gap-3 min-w-0 flex-1">
-                  <div className="h-9 w-9 sm:h-10 sm:w-10 shrink-0 rounded-full bg-emerald-500/10 flex items-center justify-center">
-                    <CreditCard className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-400" />
+            {stats?.recentTransactions && stats.recentTransactions.length > 0 ? (
+              stats.recentTransactions.slice(0, 4).map((transaction) => (
+                <div
+                  key={transaction.id}
+                  className="flex items-center justify-between border-b border-white/5 pb-4 last:border-0 gap-3"
+                >
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <div className="h-9 w-9 sm:h-10 sm:w-10 shrink-0 rounded-full bg-emerald-500/10 flex items-center justify-center">
+                      <CreditCard className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-400" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-white truncate">
+                        {transaction.orderNumber}
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        {new Date(transaction.createdAt).toLocaleDateString('id-ID', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric'
+                        })}
+                      </p>
+                    </div>
                   </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-white truncate">
-                      Payment #{1000 + i}
-                    </p>
-                    <p className="text-xs text-gray-400">2 hours ago</p>
+                  <div className="flex flex-col items-end gap-1">
+                    <span className="text-sm font-semibold text-emerald-400 shrink-0">
+                      {formatCurrency(transaction.totalAmount)}
+                    </span>
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${getStatusColor(transaction.status)}`}>
+                      {transaction.status}
+                    </span>
                   </div>
                 </div>
-                <span className="text-sm font-semibold text-emerald-400 shrink-0">
-                  +$150.00
-                </span>
-              </div>
-            ))}
+              ))
+            ) : (
+              <p className="text-sm text-gray-500 text-center py-4">No recent transactions</p>
+            )}
           </div>
         </div>
 
-        {/* System Status */}
+        {/* Recent Users */}
         <div className="rounded-xl border border-white/10 bg-[#171717] p-5 sm:p-6">
           <h3 className="text-base sm:text-lg font-semibold text-white mb-4">
-            System Status
+            Recent Users
           </h3>
           <div className="space-y-4">
-            {[
-              { name: "API Services", status: "Operational", color: "emerald" },
-              { name: "Database", status: "Operational", color: "emerald" },
-              { name: "CDN", status: "Degraded", color: "yellow" },
-              { name: "Auth Services", status: "Operational", color: "emerald" },
-            ].map((service) => (
-              <div
-                key={service.name}
-                className="flex items-center justify-between gap-3"
-              >
-                <span className="text-sm text-gray-300 truncate">{service.name}</span>
-                <div className="flex items-center gap-2 shrink-0">
+            {stats?.recentUsers && stats.recentUsers.length > 0 ? (
+              stats.recentUsers.slice(0, 4).map((user) => (
+                <div
+                  key={user.id}
+                  className="flex items-center justify-between gap-3"
+                >
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    {user.avatar_url ? (
+                      <img 
+                        src={user.avatar_url} 
+                        alt={user.nama_panggilan}
+                        className="h-9 w-9 sm:h-10 sm:w-10 shrink-0 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="h-9 w-9 sm:h-10 sm:w-10 shrink-0 rounded-full bg-gradient-to-br from-emerald-500 to-blue-500 flex items-center justify-center text-white font-semibold">
+                        {user.nama_panggilan.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-white truncate">{user.nama_panggilan}</p>
+                      <p className="text-xs text-gray-400 truncate">{user.email}</p>
+                    </div>
+                  </div>
                   <span
-                    className={`h-2 w-2 rounded-full ${
-                      service.color === "emerald"
-                        ? "bg-emerald-500"
-                        : "bg-yellow-500"
+                    className={`text-xs px-2 py-0.5 rounded-full shrink-0 ${
+                      user.role === "ADMIN"
+                        ? "bg-purple-500/10 text-purple-400"
+                        : "bg-blue-500/10 text-blue-400"
                     }`}
-                  ></span>
-                  <span className="text-xs text-gray-400">
-                    {service.status}
+                  >
+                    {user.role}
                   </span>
                 </div>
-              </div>
-            ))}
+              ))
+            ) : (
+              <p className="text-sm text-gray-500 text-center py-4">No recent users</p>
+            )}
           </div>
         </div>
       </div>

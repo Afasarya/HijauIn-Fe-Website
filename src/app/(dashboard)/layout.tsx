@@ -3,6 +3,7 @@ import { Sidebar } from "@/components/layout/sidebar";
 import { TopBar } from "@/components/layout/topbar";
 import { MobileSidebar } from "@/components/layout/mobile-sidebar";
 import { DynamicLayout } from "@/components/layout/dynamic-layout";
+import { RequireAuth } from "@/components/auth/require-auth";
 
 export default function DashboardLayout({
   children,
@@ -10,22 +11,24 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <SidebarProvider>
-      {/* Desktop Sidebar */}
-      <div className="hidden lg:block">
-        <Sidebar />
-      </div>
+    <RequireAuth>
+      <SidebarProvider>
+        {/* Desktop Sidebar */}
+        <div className="hidden lg:block">
+          <Sidebar />
+        </div>
 
-      {/* Mobile Sidebar */}
-      <MobileSidebar />
+        {/* Mobile Sidebar */}
+        <MobileSidebar />
 
-      {/* Main Content Area with Dynamic Padding */}
-      <DynamicLayout>
-        <TopBar />
-        <main className="min-h-screen p-4 sm:p-6 lg:p-8">
-          {children}
-        </main>
-      </DynamicLayout>
-    </SidebarProvider>
+        {/* Main Content Area with Dynamic Padding */}
+        <DynamicLayout>
+          <TopBar />
+          <main className="min-h-screen p-4 sm:p-6 lg:p-8">
+            {children}
+          </main>
+        </DynamicLayout>
+      </SidebarProvider>
+    </RequireAuth>
   );
 }

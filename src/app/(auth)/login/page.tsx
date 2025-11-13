@@ -1,32 +1,53 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2, AlertCircle } from "lucide-react";
+import { useAuth } from "@/contexts/auth-context";
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const { login } = useAuth();
+  
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string>("");
   const [formData, setFormData] = useState({
-    email: "",
+    emailOrUsername: "",
     password: "",
     remember: false,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
     setIsLoading(true);
 
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      await login({
+        emailOrUsername: formData.emailOrUsername,
+        password: formData.password,
+      });
+
+      // Get redirect URL from query params or default to dashboard
+      const redirect = searchParams.get('redirect') || '/dashboard';
+      router.push(redirect);
+    } catch (err: any) {
+      console.error('Login error:', err);
+      
+      // Extract error message from response
+      const errorMessage = err.response?.data?.message || 
+                          err.message || 
+                          'Invalid credentials. Please try again.';
+      setError(errorMessage);
+    } finally {
       setIsLoading(false);
-      router.push("/");
-    }, 1500);
+    }
   };
 
   return (
@@ -113,24 +134,33 @@ export default function LoginPage() {
 
           {/* Login Form */}
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Email Input */}
+            {/* Error Message */}
+            {error && (
+              <div className="rounded-lg bg-red-500/10 border border-red-500/20 p-3 flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 text-red-400 shrink-0 mt-0.5" />
+                <p className="text-sm text-red-400">{error}</p>
+              </div>
+            )}
+
+            {/* Email or Username Input */}
             <div className="space-y-2">
               <label
-                htmlFor="email"
+                htmlFor="emailOrUsername"
                 className="text-sm font-medium text-gray-300"
               >
                 Email or Username
               </label>
               <Input
-                id="email"
+                id="emailOrUsername"
                 type="text"
-                placeholder="admin@hijauin.com"
-                value={formData.email}
+                placeholder="admin@hijauin.com or admin"
+                value={formData.emailOrUsername}
                 onChange={(e) =>
-                  setFormData({ ...formData, email: e.target.value })
+                  setFormData({ ...formData, emailOrUsername: e.target.value })
                 }
                 className="h-12 bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500/50"
                 required
+                disabled={isLoading}
               />
             </div>
 
@@ -153,11 +183,13 @@ export default function LoginPage() {
                   }
                   className="h-12 bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500/50 pr-10"
                   required
+                  disabled={isLoading}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-300 transition-colors"
+                  disabled={isLoading}
                 >
                   {showPassword ? (
                     <EyeOff className="h-4 w-4" />

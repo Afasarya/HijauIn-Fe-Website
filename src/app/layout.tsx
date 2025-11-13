@@ -4,6 +4,7 @@ import "@fontsource/plus-jakarta-sans/500.css";
 import "@fontsource/plus-jakarta-sans/600.css";
 import "@fontsource/plus-jakarta-sans/700.css";
 import "./globals.css";
+import { AuthProvider } from "@/contexts/auth-context";
 
 export const metadata: Metadata = {
   title: "HijauIn Admin Panel",
@@ -20,8 +21,11 @@ export default function RootLayout({
       <body
         className="antialiased bg-[#0a0a0a] text-foreground"
         style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+        suppressHydrationWarning
       >
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );
