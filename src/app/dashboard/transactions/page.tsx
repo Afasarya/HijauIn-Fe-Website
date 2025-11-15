@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { ShoppingCart, DollarSign, Clock, XCircle, Search, Loader2, Trash2, Eye, RefreshCw, Package, Truck, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useTransactions, useTransactionsStats } from "@/lib/hooks/useApi";
+import { useTransactions } from "@/lib/hooks/useApi";
 import { transactionsService } from "@/lib/api";
 import { TransactionStatus } from "@/types/common";
 
@@ -22,12 +22,29 @@ export default function TransactionsPage() {
     search: search || undefined,
   });
 
-  // Fetch transaction statistics
-  const { data: stats, isLoading: statsLoading, refetch: refetchStats } = useTransactionsStats();
+  // Calculate stats directly from transactions data - SAMA seperti di dashboard
+  const stats = useMemo(() => {
+    const allTransactions = transactionsData?.data || [];
+    
+    const total = allTransactions.length;
+    
+    // Total revenue HANYA dari transaksi PAID dan DELIVERED
+    const totalRevenue = allTransactions.reduce((sum, transaction) => {
+      if (transaction.status === 'PAID' || transaction.status === 'DELIVERED') {
+        return sum + (transaction.totalAmount || 0);
+      }
+      return sum;
+    }, 0);
+    
+    const pending = allTransactions.filter(t => t.status === 'PENDING').length;
+    const paid = allTransactions.filter(t => t.status === 'PAID' || t.status === 'DELIVERED').length;
+    
+    return { total, totalRevenue, pending, paid };
+  }, [transactionsData]);
 
   // Debug logs
   console.log('Transactions Data:', transactionsData);
-  console.log('Transactions Stats:', stats);
+  console.log('Calculated Stats:', stats);
 
   const handleUpdateStatus = async (id: string, newStatus: string) => {
     if (!confirm(`Are you sure you want to update status to ${newStatus}?`)) return;
@@ -35,7 +52,6 @@ export default function TransactionsPage() {
     try {
       await transactionsService.updateStatus(id, newStatus);
       refetch();
-      refetchStats();
       alert('Transaction status updated successfully!');
     } catch (error: any) {
       console.error("Update failed:", error);
@@ -49,7 +65,6 @@ export default function TransactionsPage() {
     try {
       await transactionsService.delete(id);
       refetch();
-      refetchStats();
       alert('Transaction deleted successfully!');
     } catch (error: any) {
       console.error("Delete failed:", error);
@@ -59,7 +74,7 @@ export default function TransactionsPage() {
 
   const handleRefresh = async () => {
     console.log('Refreshing data...');
-    await Promise.all([refetch(), refetchStats()]);
+    await refetch();
   };
 
   const handleViewDetail = (transaction: any) => {
@@ -73,7 +88,7 @@ export default function TransactionsPage() {
     return transaction.status === statusFilter;
   });
 
-  // Format currency
+  // Format currency - GUNAKAN RUPIAH
   const formatRupiah = (amount: number) => {
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',
@@ -173,7 +188,7 @@ export default function TransactionsPage() {
             <div>
               <p className="text-xs text-gray-400">Total Transactions</p>
               <p className="text-xl font-bold text-white">
-                {statsLoading ? (
+                {isLoading ? (
                   <Loader2 className="h-5 w-5 animate-spin inline" />
                 ) : (
                   (stats?.total ?? 0).toLocaleString()
@@ -190,7 +205,7 @@ export default function TransactionsPage() {
             <div>
               <p className="text-xs text-gray-400">Total Revenue</p>
               <p className="text-xl font-bold text-white">
-                {statsLoading ? (
+                {isLoading ? (
                   <Loader2 className="h-5 w-5 animate-spin inline" />
                 ) : (
                   formatRupiah(stats?.totalRevenue ?? 0)
@@ -207,7 +222,7 @@ export default function TransactionsPage() {
             <div>
               <p className="text-xs text-gray-400">Pending</p>
               <p className="text-xl font-bold text-white">
-                {statsLoading ? (
+                {isLoading ? (
                   <Loader2 className="h-5 w-5 animate-spin inline" />
                 ) : (
                   (stats?.pending ?? 0).toLocaleString()
@@ -224,7 +239,7 @@ export default function TransactionsPage() {
             <div>
               <p className="text-xs text-gray-400">Paid</p>
               <p className="text-xl font-bold text-white">
-                {statsLoading ? (
+                {isLoading ? (
                   <Loader2 className="h-5 w-5 animate-spin inline" />
                 ) : (
                   (stats?.paid ?? 0).toLocaleString()
