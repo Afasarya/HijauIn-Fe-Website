@@ -252,18 +252,26 @@ export default function TransactionsPage() {
             />
           </div>
           <select 
-            className="rounded-lg bg-white/5 border border-white/10 px-4 py-2 text-sm text-white"
+            className="rounded-lg bg-white/5 border border-white/10 px-4 py-2 text-sm text-white hover:bg-white/10 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all"
+            style={{
+              backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+              backgroundPosition: 'right 0.5rem center',
+              backgroundRepeat: 'no-repeat',
+              backgroundSize: '1.5em 1.5em',
+              paddingRight: '2.5rem',
+              appearance: 'none',
+            }}
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
           >
-            <option value="ALL">All Status</option>
-            <option value="PENDING">Pending</option>
-            <option value="PAID">Paid</option>
-            <option value="PROCESSING">Processing</option>
-            <option value="SHIPPED">Shipped</option>
-            <option value="DELIVERED">Delivered</option>
-            <option value="CANCELLED">Cancelled</option>
-            <option value="FAILED">Failed</option>
+            <option value="ALL" className="bg-[#1a1a1a] text-white">All Status</option>
+            <option value="PENDING" className="bg-[#1a1a1a] text-white">Pending</option>
+            <option value="PAID" className="bg-[#1a1a1a] text-white">Paid</option>
+            <option value="PROCESSING" className="bg-[#1a1a1a] text-white">Processing</option>
+            <option value="SHIPPED" className="bg-[#1a1a1a] text-white">Shipped</option>
+            <option value="DELIVERED" className="bg-[#1a1a1a] text-white">Delivered</option>
+            <option value="CANCELLED" className="bg-[#1a1a1a] text-white">Cancelled</option>
+            <option value="FAILED" className="bg-[#1a1a1a] text-white">Failed</option>
           </select>
         </div>
       </div>
@@ -417,7 +425,7 @@ export default function TransactionsPage() {
               <div className="rounded-lg bg-white/5 p-4">
                 <label className="block text-sm font-medium text-gray-400 mb-2">Update Status</label>
                 <select 
-                  className="w-full rounded-lg bg-[#0a0a0a] border border-white/20 px-4 py-3 text-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all"
+                  className="w-full rounded-lg bg-[#1a1a1a] border border-white/20 px-4 py-3 text-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all"
                   style={{
                     backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
                     backgroundPosition: 'right 0.5rem center',
@@ -429,13 +437,13 @@ export default function TransactionsPage() {
                   value={selectedTransaction.status}
                   onChange={(e) => handleUpdateStatus(selectedTransaction.id, e.target.value)}
                 >
-                  <option value="PENDING" className="bg-[#0a0a0a] text-white">Pending</option>
-                  <option value="PAID" className="bg-[#0a0a0a] text-white">Paid</option>
-                  <option value="PROCESSING" className="bg-[#0a0a0a] text-white">Processing</option>
-                  <option value="SHIPPED" className="bg-[#0a0a0a] text-white">Shipped</option>
-                  <option value="DELIVERED" className="bg-[#0a0a0a] text-white">Delivered</option>
-                  <option value="CANCELLED" className="bg-[#0a0a0a] text-white">Cancelled</option>
-                  <option value="FAILED" className="bg-[#0a0a0a] text-white">Failed</option>
+                  <option value="PENDING" style={{ backgroundColor: '#1a1a1a', color: '#facc15' }}>⏳ Pending</option>
+                  <option value="PAID" style={{ backgroundColor: '#1a1a1a', color: '#10b981' }}>✅ Paid</option>
+                  <option value="PROCESSING" style={{ backgroundColor: '#1a1a1a', color: '#3b82f6' }}>📦 Processing</option>
+                  <option value="SHIPPED" style={{ backgroundColor: '#1a1a1a', color: '#3b82f6' }}>🚚 Shipped</option>
+                  <option value="DELIVERED" style={{ backgroundColor: '#1a1a1a', color: '#10b981' }}>✅ Delivered</option>
+                  <option value="CANCELLED" style={{ backgroundColor: '#1a1a1a', color: '#ef4444' }}>❌ Cancelled</option>
+                  <option value="FAILED" style={{ backgroundColor: '#1a1a1a', color: '#ef4444' }}>⚠️ Failed</option>
                 </select>
               </div>
 

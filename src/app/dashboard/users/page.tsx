@@ -188,13 +188,21 @@ export default function UsersPage() {
             />
           </div>
           <select 
-            className="rounded-lg bg-white/5 border border-white/10 px-4 py-2 text-sm text-white"
+            className="rounded-lg bg-white/5 border border-white/10 px-4 py-2 text-sm text-white hover:bg-white/10 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all"
+            style={{
+              backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+              backgroundPosition: 'right 0.5rem center',
+              backgroundRepeat: 'no-repeat',
+              backgroundSize: '1.5em 1.5em',
+              paddingRight: '2.5rem',
+              appearance: 'none',
+            }}
             value={roleFilter}
             onChange={(e) => setRoleFilter(e.target.value as any)}
           >
-            <option value="ALL">All Roles</option>
-            <option value="ADMIN">Admin</option>
-            <option value="USER">User</option>
+            <option value="ALL" className="bg-[#1a1a1a] text-white">All Roles</option>
+            <option value="ADMIN" className="bg-[#1a1a1a] text-white">Admin</option>
+            <option value="USER" className="bg-[#1a1a1a] text-white">User</option>
           </select>
         </div>
       </div>
@@ -235,7 +243,7 @@ export default function UsersPage() {
                               className="h-8 w-8 rounded-full object-cover"
                             />
                           ) : (
-                            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-emerald-500 to-blue-500 flex items-center justify-center text-white font-semibold text-sm">
+                            <div className="h-8 w-8 rounded-full bg-linear-to-br from-emerald-500 to-blue-500 flex items-center justify-center text-white font-semibold text-sm">
                               {user.nama_panggilan.charAt(0).toUpperCase()}
                             </div>
                           )}

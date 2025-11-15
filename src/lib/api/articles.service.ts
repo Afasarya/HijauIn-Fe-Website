@@ -14,6 +14,28 @@ import {
  */
 export const articlesService = {
   /**
+   * Upload image for article (Admin only)
+   */
+  uploadImage: async (file: File): Promise<{ url: string; filename: string }> => {
+    const formData = new FormData();
+    formData.append('image', file);
+    
+    const response = await apiClient.post<{
+      message: string;
+      data: { url: string; filename: string };
+    }>(
+      API_ENDPOINTS.ARTICLES.UPLOAD,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+    return response.data.data;
+  },
+
+  /**
    * Get all articles with pagination
    */
   getAll: async (params?: PaginationParams): Promise<PaginatedResponse<Article>> => {

@@ -8,47 +8,76 @@ import { DashboardStats } from '@/types/common';
 export const dashboardService = {
   /**
    * Get dashboard statistics
-   * Aggregates data from multiple endpoints
+   * Aggregates data from multiple endpoints that actually exist
    */
   getStats: async (): Promise<DashboardStats> => {
     try {
-      // Fetch all stats in parallel for better performance
-      const [usersRes, productsRes, transactionsRes, articlesRes, wasteLocationsRes] = 
+      console.log('Fetching dashboard stats...');
+      
+      // Fetch all data in parallel - HANYA menggunakan endpoint yang benar-benar ada
+      const [usersRes, transactionsRes, productsRes, articlesRes, wasteLocationsRes] = 
         await Promise.allSettled([
-          apiClient.get('/users/stats'),
-          apiClient.get('/products/stats'),
-          apiClient.get('/transactions/stats'),
-          apiClient.get('/articles/stats'),
-          apiClient.get('/waste-locations/stats'),
+          apiClient.get('/users'),
+          apiClient.get('/transactions/admin/all'),
+          apiClient.get('/products'),
+          apiClient.get('/articles'),
+          apiClient.get('/waste-locations'),
         ]);
 
-      // Extract data with fallbacks
-      const usersData = usersRes.status === 'fulfilled' ? usersRes.value.data : { total: 0, recentUsers: [] };
-      const productsData = productsRes.status === 'fulfilled' ? productsRes.value.data : { total: 0 };
-      const transactionsData = transactionsRes.status === 'fulfilled' ? transactionsRes.value.data : { 
-        total: 0, 
-        totalRevenue: 0, 
-        recentTransactions: [] 
-      };
-      const articlesData = articlesRes.status === 'fulfilled' ? articlesRes.value.data : { total: 0 };
-      const wasteLocationsData = wasteLocationsRes.status === 'fulfilled' ? wasteLocationsRes.value.data : { total: 0 };
+      console.log('API Responses:', { usersRes, transactionsRes, productsRes, articlesRes, wasteLocationsRes });
+
+      // Extract data dengan format yang benar dari setiap endpoint
+      const usersData = usersRes.status === 'fulfilled' ? usersRes.value.data.users : [];
+      const transactionsData = transactionsRes.status === 'fulfilled' ? transactionsRes.value.data.data : [];
+      const productsData = productsRes.status === 'fulfilled' ? productsRes.value.data.data : [];
+      const articlesData = articlesRes.status === 'fulfilled' ? articlesRes.value.data.data : [];
+      const wasteLocationsData = wasteLocationsRes.status === 'fulfilled' ? wasteLocationsRes.value.data.data : [];
+
+      // Calculate totals
+      const totalUsers = Array.isArray(usersData) ? usersData.length : 0;
+      const totalTransactions = Array.isArray(transactionsData) ? transactionsData.length : 0;
+      const totalProducts = Array.isArray(productsData) ? productsData.length : 0;
+      const totalArticles = Array.isArray(articlesData) ? articlesData.length : 0;
+      const totalWasteLocations = Array.isArray(wasteLocationsData) ? wasteLocationsData.length : 0;
+
+      // Calculate total revenue from PAID transactions
+      const totalRevenue = Array.isArray(transactionsData) 
+        ? transactionsData
+            .filter((t: any) => t.status === 'PAID' || t.status === 'DELIVERED')
+            .reduce((sum: number, t: any) => sum + (t.totalAmount || 0), 0)
+        : 0;
+
+      // Get recent transactions (sorted by date)
+      const recentTransactions = Array.isArray(transactionsData)
+        ? transactionsData
+            .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+            .slice(0, 5)
+        : [];
+
+      // Get recent users (sorted by date)
+      const recentUsers = Array.isArray(usersData)
+        ? usersData
+            .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+            .slice(0, 5)
+        : [];
 
       const stats: DashboardStats = {
-        totalUsers: usersData.total || 0,
-        totalProducts: productsData.total || 0,
-        totalTransactions: transactionsData.total || 0,
-        totalRevenue: transactionsData.totalRevenue || 0,
-        totalArticles: articlesData.total || 0,
-        totalWasteLocations: wasteLocationsData.total || 0,
-        recentTransactions: transactionsData.recentTransactions || [],
-        recentUsers: usersData.recentUsers || [],
-        revenueGrowth: transactionsData.growth || 0,
-        userGrowth: usersData.growth || 0,
+        totalUsers,
+        totalProducts,
+        totalTransactions,
+        totalRevenue,
+        totalArticles,
+        totalWasteLocations,
+        recentTransactions,
+        recentUsers,
       };
 
+      console.log('Dashboard stats compiled:', stats);
       return stats;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching dashboard stats:', error);
+      console.error('Error details:', error.response?.data);
+      
       // Return empty stats on error
       return {
         totalUsers: 0,

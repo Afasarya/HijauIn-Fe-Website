@@ -19,7 +19,7 @@ import {
   ProductCategory,
   Transaction,
   Article,
-  WasteLocation,
+  WasteCategory,
   DashboardStats,
   PaginationParams,
   PaginatedResponse,
@@ -153,17 +153,16 @@ export function useArticleBySlug(slug: string) {
 export function useArticlesStats() {
   return useApiData(() => articlesService.getStats());
 }
-
 // Waste Locations hooks
-export function useWasteLocations(params?: PaginationParams) {
-  return useApiData<PaginatedResponse<WasteLocation>>(
-    () => wasteLocationsService.getAll(params),
-    [JSON.stringify(params)]
+export function useWasteLocations(categories?: WasteCategory[]) {
+  return useApiData(
+    () => wasteLocationsService.getAll(categories),
+    [JSON.stringify(categories)]
   );
 }
 
 export function useWasteLocation(id: string) {
-  return useApiData<WasteLocation>(
+  return useApiData(
     () => wasteLocationsService.getById(id),
     [id]
   );
@@ -172,3 +171,4 @@ export function useWasteLocation(id: string) {
 export function useWasteLocationsStats() {
   return useApiData(() => wasteLocationsService.getStats());
 }
+

@@ -37,6 +37,7 @@ export const API_ENDPOINTS = {
   PRODUCTS: {
     BASE: '/products',
     BY_ID: (id: string) => `/products/${id}`,
+    UPLOAD: '/products/upload',
     STATS: '/products/stats',
     CATEGORIES: '/products/categories',
   },
@@ -45,6 +46,7 @@ export const API_ENDPOINTS = {
   PRODUCT_CATEGORIES: {
     BASE: '/product-categories',
     BY_ID: (id: string) => `/product-categories/${id}`,
+    UPLOAD: '/product-categories/upload',
   },
   
   // Transactions endpoints
@@ -63,6 +65,7 @@ export const API_ENDPOINTS = {
     BASE: '/articles',
     BY_ID: (id: string) => `/articles/${id}`,
     BY_SLUG: (slug: string) => `/articles/slug/${slug}`,
+    UPLOAD: '/articles/upload',
     STATS: '/articles/stats',
     PUBLIC: '/public/articles',
     PUBLIC_BY_SLUG: (slug: string) => `/public/articles/${slug}`,
@@ -72,6 +75,7 @@ export const API_ENDPOINTS = {
   WASTE_LOCATIONS: {
     BASE: '/waste-locations',
     BY_ID: (id: string) => `/waste-locations/${id}`,
+    UPLOAD: '/waste-locations/upload',
     STATS: '/waste-locations/stats',
     PUBLIC: '/loka',
     NEARBY: '/loka/nearby',

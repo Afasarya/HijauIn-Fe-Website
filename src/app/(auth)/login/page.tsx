@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Eye, EyeOff, Loader2, AlertCircle } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { login } = useAuth();
@@ -37,12 +37,13 @@ export default function LoginPage() {
       // Get redirect URL from query params or default to dashboard
       const redirect = searchParams.get('redirect') || '/dashboard';
       router.push(redirect);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Login error:', err);
       
       // Extract error message from response
-      const errorMessage = err.response?.data?.message || 
-                          err.message || 
+      const error = err as { response?: { data?: { message?: string } }; message?: string };
+      const errorMessage = error.response?.data?.message || 
+                          error.message || 
                           'Invalid credentials. Please try again.';
       setError(errorMessage);
     } finally {
@@ -50,6 +51,121 @@ export default function LoginPage() {
     }
   };
 
+  return (
+    <form onSubmit={handleSubmit} className="space-y-5">
+      {/* Error Message */}
+      {error && (
+        <div className="rounded-lg bg-red-500/10 border border-red-500/20 p-3 flex items-start gap-3">
+          <AlertCircle className="h-5 w-5 text-red-400 shrink-0 mt-0.5" />
+          <p className="text-sm text-red-400">{error}</p>
+        </div>
+      )}
+
+      {/* Email or Username Input */}
+      <div className="space-y-2">
+        <label
+          htmlFor="emailOrUsername"
+          className="text-sm font-medium text-gray-300"
+        >
+          Email or Username
+        </label>
+        <Input
+          id="emailOrUsername"
+          type="text"
+          placeholder="admin@hijauin.com or admin"
+          value={formData.emailOrUsername}
+          onChange={(e) =>
+            setFormData({ ...formData, emailOrUsername: e.target.value })
+          }
+          className="h-12 bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500/50"
+          required
+          disabled={isLoading}
+        />
+      </div>
+
+      {/* Password Input */}
+      <div className="space-y-2">
+        <label
+          htmlFor="password"
+          className="text-sm font-medium text-gray-300"
+        >
+          Password
+        </label>
+        <div className="relative">
+          <Input
+            id="password"
+            type={showPassword ? "text" : "password"}
+            placeholder="Enter your password"
+            value={formData.password}
+            onChange={(e) =>
+              setFormData({ ...formData, password: e.target.value })
+            }
+            className="h-12 bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500/50 pr-10"
+            required
+            disabled={isLoading}
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-300 transition-colors"
+            disabled={isLoading}
+          >
+            {showPassword ? (
+              <EyeOff className="h-4 w-4" />
+            ) : (
+              <Eye className="h-4 w-4" />
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* Remember Me & Forgot Password */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-2">
+          <input
+            id="remember"
+            type="checkbox"
+            checked={formData.remember}
+            onChange={(e) =>
+              setFormData({ ...formData, remember: e.target.checked })
+            }
+            className="h-4 w-4 rounded border-white/10 bg-white/5 text-emerald-500 focus:ring-2 focus:ring-emerald-500/50 focus:ring-offset-0"
+          />
+          <label
+            htmlFor="remember"
+            className="text-sm text-gray-400 cursor-pointer select-none"
+          >
+            Remember me
+          </label>
+        </div>
+        <Link
+          href="/forgot-password"
+          className="text-sm text-emerald-400 hover:text-emerald-300 transition-colors font-medium"
+        >
+          Forgot password?
+        </Link>
+      </div>
+
+      {/* Login Button */}
+      <Button
+        type="submit"
+        disabled={isLoading}
+        className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold shadow-lg shadow-emerald-500/20 transition-all text-base"
+      >
+        {isLoading ? (
+          <>
+            <Loader2 className="h-5 w-5 animate-spin" />
+            Signing in...
+          </>
+        ) : (
+          "Sign in"
+        )}
+      </Button>
+    </form>
+  );
+}
+
+export default function LoginPage() {
   return (
     <div className="flex min-h-screen">
       {/* Left Side - Image/Illustration */}
@@ -101,7 +217,7 @@ export default function LoginPage() {
           {/* Quote/Testimonial */}
           <div className="mt-auto pt-12 text-center max-w-lg">
             <p className="text-sm text-gray-400 italic">
-              "This library has saved me countless hours of work and helped me deliver stunning designs to my clients faster than ever before."
+              &quot;This library has saved me countless hours of work and helped me deliver stunning designs to my clients faster than ever before.&quot;
             </p>
             <p className="mt-2 text-xs text-emerald-400">- Sofia Davis</p>
           </div>
@@ -133,116 +249,15 @@ export default function LoginPage() {
           </div>
 
           {/* Login Form */}
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Error Message */}
-            {error && (
-              <div className="rounded-lg bg-red-500/10 border border-red-500/20 p-3 flex items-start gap-3">
-                <AlertCircle className="h-5 w-5 text-red-400 shrink-0 mt-0.5" />
-                <p className="text-sm text-red-400">{error}</p>
-              </div>
-            )}
-
-            {/* Email or Username Input */}
-            <div className="space-y-2">
-              <label
-                htmlFor="emailOrUsername"
-                className="text-sm font-medium text-gray-300"
-              >
-                Email or Username
-              </label>
-              <Input
-                id="emailOrUsername"
-                type="text"
-                placeholder="admin@hijauin.com or admin"
-                value={formData.emailOrUsername}
-                onChange={(e) =>
-                  setFormData({ ...formData, emailOrUsername: e.target.value })
-                }
-                className="h-12 bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500/50"
-                required
-                disabled={isLoading}
-              />
+          <Suspense fallback={
+            <div className="space-y-5">
+              <div className="h-12 bg-white/5 animate-pulse rounded-md"></div>
+              <div className="h-12 bg-white/5 animate-pulse rounded-md"></div>
+              <div className="h-12 bg-white/5 animate-pulse rounded-md"></div>
             </div>
-
-            {/* Password Input */}
-            <div className="space-y-2">
-              <label
-                htmlFor="password"
-                className="text-sm font-medium text-gray-300"
-              >
-                Password
-              </label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Enter your password"
-                  value={formData.password}
-                  onChange={(e) =>
-                    setFormData({ ...formData, password: e.target.value })
-                  }
-                  className="h-12 bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500/50 pr-10"
-                  required
-                  disabled={isLoading}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-300 transition-colors"
-                  disabled={isLoading}
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
-                </button>
-              </div>
-            </div>
-
-            {/* Remember Me & Forgot Password */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <input
-                  id="remember"
-                  type="checkbox"
-                  checked={formData.remember}
-                  onChange={(e) =>
-                    setFormData({ ...formData, remember: e.target.checked })
-                  }
-                  className="h-4 w-4 rounded border-white/10 bg-white/5 text-emerald-500 focus:ring-2 focus:ring-emerald-500/50 focus:ring-offset-0"
-                />
-                <label
-                  htmlFor="remember"
-                  className="text-sm text-gray-400 cursor-pointer select-none"
-                >
-                  Remember me
-                </label>
-              </div>
-              <Link
-                href="/forgot-password"
-                className="text-sm text-emerald-400 hover:text-emerald-300 transition-colors font-medium"
-              >
-                Forgot password?
-              </Link>
-            </div>
-
-            {/* Login Button */}
-            <Button
-              type="submit"
-              disabled={isLoading}
-              className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold shadow-lg shadow-emerald-500/20 transition-all text-base"
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                  Signing in...
-                </>
-              ) : (
-                "Sign in"
-              )}
-            </Button>
-          </form>
+          }>
+            <LoginForm />
+          </Suspense>
 
           {/* Footer */}
           <p className="mt-8 text-center text-xs text-gray-500">

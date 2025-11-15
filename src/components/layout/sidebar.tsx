@@ -44,6 +44,11 @@ const menuItems = [
     href: "/dashboard/articles",
   },
   {
+    label: "Product Categories",
+    icon: Package,
+    href: "/dashboard/product-categories",
+  },
+  {
     label: "Product Management",
     icon: Package,
     href: "/dashboard/products",

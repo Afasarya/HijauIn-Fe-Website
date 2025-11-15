@@ -3,6 +3,7 @@ import { Sidebar } from "@/components/layout/sidebar";
 import { TopBar } from "@/components/layout/topbar";
 import { MobileSidebar } from "@/components/layout/mobile-sidebar";
 import { DynamicLayout } from "@/components/layout/dynamic-layout";
+import { Toaster } from "sonner";
 
 export default function DashboardLayout({
   children,
@@ -26,6 +27,9 @@ export default function DashboardLayout({
           {children}
         </main>
       </DynamicLayout>
+
+      {/* Toast Notifications */}
+      <Toaster position="top-right" richColors />
     </SidebarProvider>
   );
 }

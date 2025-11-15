@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import {
   Users,
   CreditCard,
@@ -30,12 +31,18 @@ export default function Home() {
     try {
       setIsLoading(true);
       setError(null);
+      console.log('Starting to fetch dashboard stats...');
+      console.log('API Base URL:', process.env.NEXT_PUBLIC_API_BASE_URL);
+      console.log('Token:', localStorage.getItem('access_token') ? 'Present' : 'Missing');
+      
       const data = await dashboardService.getStats();
+      console.log('Dashboard stats fetched successfully:', data);
       setStats(data);
-      console.log('Dashboard stats fetched:', data);
     } catch (err: any) {
       console.error("Error fetching dashboard stats:", err);
-      setError(err.message || "Failed to load dashboard data");
+      console.error("Error response:", err.response?.data);
+      console.error("Error status:", err.response?.status);
+      setError(err.response?.data?.message || err.message || "Failed to load dashboard data");
     } finally {
       setIsLoading(false);
     }
@@ -328,13 +335,15 @@ export default function Home() {
                 >
                   <div className="flex items-center gap-3 min-w-0 flex-1">
                     {user.avatar_url ? (
-                      <img 
+                      <Image 
                         src={user.avatar_url} 
                         alt={user.nama_panggilan}
+                        width={40}
+                        height={40}
                         className="h-9 w-9 sm:h-10 sm:w-10 shrink-0 rounded-full object-cover"
                       />
                     ) : (
-                      <div className="h-9 w-9 sm:h-10 sm:w-10 shrink-0 rounded-full bg-gradient-to-br from-emerald-500 to-blue-500 flex items-center justify-center text-white font-semibold">
+                      <div className="h-9 w-9 sm:h-10 sm:w-10 shrink-0 rounded-full bg-linear-to-br from-emerald-500 to-blue-500 flex items-center justify-center text-white font-semibold">
                         {user.nama_panggilan.charAt(0).toUpperCase()}
                       </div>
                     )}

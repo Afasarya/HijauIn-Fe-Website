@@ -213,6 +213,7 @@ export interface Article {
 
 export interface CreateArticleRequest {
   title: string;
+  slug: string;
   thumbnailUrl?: string;
   content: string;
 }
